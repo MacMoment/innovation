@@ -48,33 +48,31 @@ public class DatabaseManager {
     }
 
     private void createTables() {
-        String punishmentsTable = """
-            CREATE TABLE IF NOT EXISTS punishments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_uuid TEXT NOT NULL,
-                player_name TEXT NOT NULL,
-                staff_uuid TEXT NOT NULL,
-                staff_name TEXT NOT NULL,
-                type TEXT NOT NULL,
-                reason TEXT,
-                timestamp INTEGER NOT NULL,
-                duration INTEGER NOT NULL,
-                expiration INTEGER NOT NULL,
-                active INTEGER DEFAULT 1,
-                server TEXT DEFAULT 'main'
-            );
-            """;
+        String punishmentsTable = 
+            "CREATE TABLE IF NOT EXISTS punishments (" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "    player_uuid TEXT NOT NULL," +
+            "    player_name TEXT NOT NULL," +
+            "    staff_uuid TEXT NOT NULL," +
+            "    staff_name TEXT NOT NULL," +
+            "    type TEXT NOT NULL," +
+            "    reason TEXT," +
+            "    timestamp INTEGER NOT NULL," +
+            "    duration INTEGER NOT NULL," +
+            "    expiration INTEGER NOT NULL," +
+            "    active INTEGER DEFAULT 1," +
+            "    server TEXT DEFAULT 'main'" +
+            ")";
 
-        String staffTable = """
-            CREATE TABLE IF NOT EXISTS staff (
-                uuid TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                staff_rank TEXT DEFAULT 'Staff',
-                tier INTEGER DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            """;
+        String staffTable = 
+            "CREATE TABLE IF NOT EXISTS staff (" +
+            "    uuid TEXT PRIMARY KEY," +
+            "    name TEXT NOT NULL," +
+            "    staff_rank TEXT DEFAULT 'Staff'," +
+            "    tier INTEGER DEFAULT 1," +
+            "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+            "    last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+            ")";
 
         // Create indexes for better query performance
         String indexPlayerUuid = "CREATE INDEX IF NOT EXISTS idx_player_uuid ON punishments(player_uuid);";
@@ -96,11 +94,10 @@ public class DatabaseManager {
 
     public CompletableFuture<Punishment> savePunishment(Punishment punishment) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = """
-                INSERT INTO punishments (player_uuid, player_name, staff_uuid, staff_name, 
-                    type, reason, timestamp, duration, expiration, active, server)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+            String sql = 
+                "INSERT INTO punishments (player_uuid, player_name, staff_uuid, staff_name, " +
+                "    type, reason, timestamp, duration, expiration, active, server) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -132,11 +129,10 @@ public class DatabaseManager {
 
     public CompletableFuture<Punishment> getActiveBan(UUID playerUuid) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = """
-                SELECT * FROM punishments 
-                WHERE player_uuid = ? AND type IN ('BAN', 'TEMP_BAN') AND active = ?
-                ORDER BY timestamp DESC LIMIT 1
-                """;
+            String sql = 
+                "SELECT * FROM punishments " +
+                "WHERE player_uuid = ? AND type IN ('BAN', 'TEMP_BAN') AND active = ? " +
+                "ORDER BY timestamp DESC LIMIT 1";
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -162,11 +158,10 @@ public class DatabaseManager {
 
     public CompletableFuture<Punishment> getActiveMute(UUID playerUuid) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = """
-                SELECT * FROM punishments 
-                WHERE player_uuid = ? AND type IN ('MUTE', 'TEMP_MUTE') AND active = ?
-                ORDER BY timestamp DESC LIMIT 1
-                """;
+            String sql = 
+                "SELECT * FROM punishments " +
+                "WHERE player_uuid = ? AND type IN ('MUTE', 'TEMP_MUTE') AND active = ? " +
+                "ORDER BY timestamp DESC LIMIT 1";
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
