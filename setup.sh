@@ -394,7 +394,7 @@ build_minecraft_plugin() {
             info "Building Minecraft plugin..."
             cd "$SCRIPT_DIR/minecraft-plugin"
             
-            if mvn clean package -q; then
+            if mvn clean package -B; then
                 if [ -f "target/StaffSystem-1.0.0.jar" ]; then
                     success "Plugin built successfully!"
                     echo ""
@@ -745,7 +745,7 @@ main() {
             if command_exists mvn; then
                 if prompt_yes_no "Would you like to build the plugin first?" "y"; then
                     cd "$SCRIPT_DIR/minecraft-plugin"
-                    if mvn clean package -q && [ -f "target/StaffSystem-1.0.0.jar" ]; then
+                    if mvn clean package -B && [ -f "target/StaffSystem-1.0.0.jar" ]; then
                         success "Plugin built successfully!"
                         download_plugin
                     else

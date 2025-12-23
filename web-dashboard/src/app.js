@@ -31,17 +31,29 @@ app.set('trust proxy', process.env.FORCE_HTTPS === 'true' ? 1 : false);
 // Security middleware
 // Configure based on FORCE_HTTPS setting
 const isHttpsEnabled = process.env.FORCE_HTTPS === 'true';
+const cspDirectives = {
+    defaultSrc: ["'self'"],
+    baseUri: ["'self'"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
+    formAction: ["'self'"],
+    frameAncestors: ["'self'"],
+    imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
+    objectSrc: ["'none'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    scriptSrcAttr: ["'none'"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+};
+
+// Only add upgrade-insecure-requests directive when HTTPS is enabled
+// When HTTP-only, we omit it entirely to prevent browser upgrades to HTTPS
+if (isHttpsEnabled) {
+    cspDirectives.upgradeInsecureRequests = [];
+}
+
 app.use(helmet({
     contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
-            // Only upgrade insecure requests when HTTPS is enabled
-            upgradeInsecureRequests: isHttpsEnabled ? [] : null,
-        },
+        useDefaults: false, // Don't use helmet's defaults, use our custom directives
+        directives: cspDirectives,
     },
     // Disable HSTS to allow HTTP connections (don't force HTTPS)
     hsts: false,
