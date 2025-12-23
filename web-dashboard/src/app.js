@@ -23,16 +23,37 @@ const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
+// Disable trust proxy to prevent Express from using X-Forwarded-* headers
+// This ensures HTTP connections are not incorrectly detected as HTTPS
+// Set to false to explicitly not trust any proxy headers when running HTTP-only
+app.set('trust proxy', process.env.FORCE_HTTPS === 'true' ? 1 : false);
+
 // Security middleware
+// Configure based on FORCE_HTTPS setting
+const isHttpsEnabled = process.env.FORCE_HTTPS === 'true';
+const cspDirectives = {
+    defaultSrc: ["'self'"],
+    baseUri: ["'self'"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
+    formAction: ["'self'"],
+    frameAncestors: ["'self'"],
+    imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
+    objectSrc: ["'none'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    scriptSrcAttr: ["'none'"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+};
+
+// Only add upgrade-insecure-requests directive when HTTPS is enabled
+// When HTTP-only, we omit it entirely to prevent browser upgrades to HTTPS
+if (isHttpsEnabled) {
+    cspDirectives.upgradeInsecureRequests = [];
+}
+
 app.use(helmet({
     contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
-        },
+        useDefaults: false, // Don't use helmet's defaults, use our custom directives
+        directives: cspDirectives,
     },
     // Disable HSTS to allow HTTP connections (don't force HTTPS)
     hsts: false,
@@ -79,11 +100,13 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'default-secret-change-me',
     resave: false,
     saveUninitialized: false,
+    proxy: process.env.FORCE_HTTPS === 'true',
     cookie: {
         // Allow HTTP by setting secure to false unless explicitly enabled via FORCE_HTTPS=true
         secure: process.env.FORCE_HTTPS === 'true',
         httpOnly: true,
-        sameSite: 'strict',
+        // Use 'lax' to allow cookies during same-site navigations (e.g., form submissions, redirects)
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
