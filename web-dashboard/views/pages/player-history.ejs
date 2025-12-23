@@ -1,0 +1,105 @@
+<%- include('../layouts/main', { body: `
+<div class="mb-4">
+    <a href="/punishments" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left me-2"></i>Back to Punishments
+    </a>
+    <h1>Player History: ${playerName}</h1>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="stats-number">${stats.totalPunishments}</div>
+                <div class="stats-label">Total Punishments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <div class="stats-number">${stats.activeBans}</div>
+                <div class="stats-label">Active Bans</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="stats-number">${stats.activeMutes}</div>
+                <div class="stats-label">Active Mutes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="stats-number">${stats.totalWarnings}</div>
+                <div class="stats-label">Total Warnings</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Punishments List -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Staff</th>
+                        <th>Reason</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${punishments.map(p => {
+                        const isActive = p.active && (p.expiration === -1 || p.expiration > Date.now());
+                        const badgeClass = p.type.toLowerCase().includes('ban') ? 'ban' : 
+                            p.type.toLowerCase().includes('mute') ? 'mute' : 
+                            p.type.toLowerCase() === 'kick' ? 'kick' : 'warn';
+                        
+                        let duration = 'Permanent';
+                        if (p.duration > 0) {
+                            const days = Math.floor(p.duration / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((p.duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            duration = days > 0 ? days + 'd ' + hours + 'h' : hours + 'h';
+                        } else if (p.duration === 0) {
+                            duration = 'N/A';
+                        }
+                        
+                        return `
+                        <tr>
+                            <td>#${p.id}</td>
+                            <td><span class="badge badge-${badgeClass}">${p.type}</span></td>
+                            <td>${p.staff_name}</td>
+                            <td class="text-truncate" style="max-width: 200px;">${p.reason || 'No reason'}</td>
+                            <td>${duration}</td>
+                            <td>
+                                <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                                    ${isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                            <td>${new Date(p.timestamp).toLocaleDateString()}</td>
+                            <td>
+                                <a href="/punishments/view/${p.id}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('')}
+                    ${punishments.length === 0 ? '<tr><td colspan="8" class="text-center text-muted">No punishments found</td></tr>' : ''}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+` }) %>

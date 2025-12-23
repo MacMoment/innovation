@@ -1,0 +1,77 @@
+<%- include('../layouts/main', { body: `
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Staff Management</h1>
+    <a href="/auth/register" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>Add Staff
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Tier</th>
+                        <th>Minecraft</th>
+                        <th>Discord</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${staffMembers.map(s => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="https://crafatar.com/avatars/${s.minecraft_uuid || '00000000-0000-0000-0000-000000000000'}?size=32&overlay" 
+                                     alt="Avatar" class="rounded" width="32" height="32">
+                                <strong>${s.username}</strong>
+                            </div>
+                        </td>
+                        <td>${s.email}</td>
+                        <td>
+                            <span class="badge" style="background-color: ${s.tier_color || '#6366f1'}">
+                                ${s.tier_name || 'Tier ' + s.tier}
+                            </span>
+                        </td>
+                        <td>${s.minecraft_name || s.minecraft_uuid || '-'}</td>
+                        <td>${s.discord_id || '-'}</td>
+                        <td>
+                            <span class="badge ${s.is_active ? 'bg-success' : 'bg-danger'}">
+                                ${s.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td>${s.last_login ? new Date(s.last_login).toLocaleDateString() : 'Never'}</td>
+                        <td>
+                            <a href="/staff/edit/${s.id}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5>Tier Levels</h5>
+    <div class="row g-3">
+        ${tiers.map(t => `
+        <div class="col-md-4 col-lg-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <span class="badge mb-2" style="background-color: ${t.color}">${t.name}</span>
+                    <div class="small text-muted">Tier ${t.tier_level}</div>
+                </div>
+            </div>
+        </div>
+        `).join('')}
+    </div>
+</div>
+` }) %>
