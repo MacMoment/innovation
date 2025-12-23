@@ -29,8 +29,8 @@ router.get('/', ensureAuthenticated, (req, res) => {
         }
 
         if (search) {
-            // Escape SQL LIKE wildcards in user input to prevent injection
-            const escapedSearch = search.replace(/[%_]/g, '\\$&');
+            // Escape SQL LIKE wildcards and backslashes in user input to prevent injection
+            const escapedSearch = search.replace(/\\/g, '\\\\').replace(/[%_]/g, '\\$&');
             whereClause += ' AND (player_name LIKE ? ESCAPE \'\\\' OR staff_name LIKE ? ESCAPE \'\\\' OR reason LIKE ? ESCAPE \'\\\')';
             const searchPattern = `%${escapedSearch}%`;
             params.push(searchPattern, searchPattern, searchPattern);

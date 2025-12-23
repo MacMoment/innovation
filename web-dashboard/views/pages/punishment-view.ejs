@@ -67,6 +67,7 @@
                 ${punishment.active && (punishment.type.includes('BAN') || punishment.type.includes('MUTE')) ? `
                 <hr>
                 <form action="/punishments/revoke/${punishment.id}" method="POST" onsubmit="return confirm('Are you sure you want to revoke this punishment?');">
+                    <input type="hidden" name="_csrf" value="${typeof csrfToken !== 'undefined' ? csrfToken : ''}">
                     <button type="submit" class="btn btn-warning">
                         <i class="bi bi-x-circle me-2"></i>Revoke Punishment
                     </button>

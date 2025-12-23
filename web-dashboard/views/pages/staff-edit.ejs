@@ -11,6 +11,7 @@
         <div class="card">
             <div class="card-body">
                 <form action="/staff/edit/${staffMember.id}" method="POST">
+                    <input type="hidden" name="_csrf" value="${typeof csrfToken !== 'undefined' ? csrfToken : ''}">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Username</label>
@@ -88,6 +89,7 @@
             <div class="card-body">
                 <p class="text-muted">Deleting a staff account is permanent and cannot be undone.</p>
                 <form action="/staff/delete/${staffMember.id}" method="POST" onsubmit="return confirm('Are you sure you want to delete this staff account?');">
+                    <input type="hidden" name="_csrf" value="${typeof csrfToken !== 'undefined' ? csrfToken : ''}">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash me-2"></i>Delete Account
                     </button>

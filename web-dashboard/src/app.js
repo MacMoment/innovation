@@ -8,6 +8,7 @@ const path = require('path');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 
 const db = require('./utils/database');
 const passportConfig = require('./utils/passport');
@@ -35,13 +36,29 @@ app.use(helmet({
     },
 }));
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
     message: 'Too many requests, please try again later.'
 });
-app.use('/api/', limiter);
+app.use('/api/', apiLimiter);
+
+// Rate limiting for authentication routes (stricter)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // limit each IP to 20 requests per windowMs for auth
+    message: 'Too many authentication attempts, please try again later.'
+});
+app.use('/auth/', authLimiter);
+
+// General rate limiting for all routes
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // limit each IP to 200 requests per windowMs
+    message: 'Too many requests, please try again later.'
+});
+app.use(generalLimiter);
 
 // Body parsing
 app.use(express.json());
@@ -62,6 +79,8 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -73,6 +92,32 @@ app.use(flash());
 passportConfig(passport);
 app.use(passport.initialize());
 app.use(passport.session());
+
+// CSRF protection middleware
+app.use((req, res, next) => {
+    // Generate CSRF token if not exists
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    res.locals.csrfToken = req.session.csrfToken;
+    next();
+});
+
+// CSRF validation for state-changing requests
+app.use((req, res, next) => {
+    // Skip CSRF check for API routes (they use API keys) and GET/HEAD/OPTIONS requests
+    if (req.path.startsWith('/api/') || req.path.startsWith('/webhook/') || 
+        ['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        return next();
+    }
+    
+    const csrfToken = req.body._csrf || req.headers['x-csrf-token'];
+    if (!csrfToken || csrfToken !== req.session.csrfToken) {
+        req.flash('error_msg', 'Invalid or expired form submission. Please try again.');
+        return res.redirect('back');
+    }
+    next();
+});
 
 // Global variables for templates
 app.use((req, res, next) => {
