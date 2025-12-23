@@ -58,7 +58,7 @@ check_prerequisites() {
     # Check for Java
     if command_exists java; then
         JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
-        if [ "$JAVA_VERSION" -ge 17 ] 2>/dev/null || [ "${JAVA_VERSION%%.*}" -ge 17 ] 2>/dev/null; then
+        if [ "$JAVA_VERSION" -ge 17 ] 2>/dev/null; then
             success "Java 17+ found"
         else
             warning "Java found but version may be below 17. Required: Java 17+"
@@ -117,7 +117,8 @@ check_prerequisites() {
 generate_secret() {
     local length=${1:-32}
     if command_exists openssl; then
-        openssl rand -hex "$length" | head -c "$length"
+        # openssl rand -hex produces 2 hex chars per byte, so divide by 2
+        openssl rand -hex $((length / 2))
     else
         cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w "$length" | head -n 1
     fi
@@ -378,17 +379,20 @@ build_minecraft_plugin() {
         if prompt_yes_no "Would you like to build the Minecraft plugin now?" "y"; then
             info "Building Minecraft plugin..."
             cd "$SCRIPT_DIR/minecraft-plugin"
-            mvn clean package -q
             
-            if [ -f "target/StaffSystem-1.0.0.jar" ]; then
-                success "Plugin built successfully!"
-                echo ""
-                info "The plugin JAR is located at:"
-                echo "  $SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar"
-                echo ""
-                info "Copy this file to your Minecraft server's plugins folder."
+            if mvn clean package; then
+                if [ -f "target/StaffSystem-1.0.0.jar" ]; then
+                    success "Plugin built successfully!"
+                    echo ""
+                    info "The plugin JAR is located at:"
+                    echo "  $SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar"
+                    echo ""
+                    info "Copy this file to your Minecraft server's plugins folder."
+                else
+                    warning "Build completed but JAR file not found. Check Maven output above."
+                fi
             else
-                warning "Build may have failed. Check for errors above."
+                error "Maven build failed. Check the error messages above."
             fi
             
             cd "$SCRIPT_DIR"
@@ -405,13 +409,19 @@ install_npm_dependencies() {
     if prompt_yes_no "Would you like to install npm dependencies for web dashboard and Discord bot?" "y"; then
         info "Installing web dashboard dependencies..."
         cd "$SCRIPT_DIR/web-dashboard"
-        npm install --silent
-        success "Web dashboard dependencies installed!"
+        if npm install; then
+            success "Web dashboard dependencies installed!"
+        else
+            error "Failed to install web dashboard dependencies. Check npm output above."
+        fi
         
         info "Installing Discord bot dependencies..."
         cd "$SCRIPT_DIR/discord-bot"
-        npm install --silent
-        success "Discord bot dependencies installed!"
+        if npm install; then
+            success "Discord bot dependencies installed!"
+        else
+            error "Failed to install Discord bot dependencies. Check npm output above."
+        fi
         
         cd "$SCRIPT_DIR"
     fi
