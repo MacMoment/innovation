@@ -10,6 +10,10 @@ database:
 web-integration:
   enabled: true
   # API endpoint of your web dashboard
+  # Supports both HTTP and HTTPS - use HTTP for local development, HTTPS for production
+  # Examples:
+  #   Local: http://localhost:3000/api
+  #   Production: https://staff.yourdomain.com/api
   api-url: http://localhost:3000/api
   # Secret key for authentication (must match web dashboard)
   api-key: your-secret-api-key-here

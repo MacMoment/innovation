@@ -27,3 +27,6 @@ Thumbs.db
 # Ignore database files
 *.db
 *.sqlite
+
+# Ignore generated configuration files
+minecraft-plugin/generated/

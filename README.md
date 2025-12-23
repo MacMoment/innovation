@@ -46,10 +46,28 @@ A comprehensive staff management system for Minecraft servers, featuring a Minec
 ├── discord-bot/           # Discord.js bot
 │   ├── src/              # Bot source code
 │   └── package.json      # NPM dependencies
+├── setup.sh              # Interactive setup script
 └── README.md             # This file
 ```
 
 ## 🚀 Installation
+
+### Quick Setup (Recommended)
+
+Run the interactive setup script to configure everything automatically:
+
+```bash
+./setup.sh
+```
+
+The setup script will:
+- Check for required prerequisites (Java 17+, Node.js 18+, Maven)
+- Guide you through configuration for all components
+- Generate secure API keys and secrets
+- Create `.env` files for web dashboard and Discord bot
+- Build the Minecraft plugin (if Maven is installed)
+- Install npm dependencies
+- Generate a configuration snippet for the Minecraft plugin
 
 ### Prerequisites
 - Java 17+ (for Minecraft plugin)
@@ -57,6 +75,10 @@ A comprehensive staff management system for Minecraft servers, featuring a Minec
 - A Minecraft server running Spigot/Paper 1.20+
 
 **No database setup required!** SQLite is used automatically.
+
+### Manual Installation
+
+If you prefer to set up each component manually, follow the steps below.
 
 ### 1. Minecraft Plugin Installation
 
@@ -78,6 +100,7 @@ database:
 
 web-integration:
   enabled: true
+  # Supports both HTTP and HTTPS - use HTTP for local, HTTPS for production
   api-url: http://localhost:3000/api
   api-key: your-secret-api-key-here
 ```
