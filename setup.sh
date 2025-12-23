@@ -460,6 +460,15 @@ start_services() {
             return 1
         fi
         
+        # Check if dependencies were installed
+        if [ "$WEB_DEPS_INSTALLED" = false ] && [ ! -d "$SCRIPT_DIR/web-dashboard/node_modules" ]; then
+            warning "Web dashboard dependencies may not be installed."
+            if ! prompt_yes_no "Continue anyway?" "n"; then
+                info "Run 'npm install' in the web-dashboard directory first."
+                return 1
+            fi
+        fi
+        
         # Select mode
         echo ""
         info "Select startup mode:"
