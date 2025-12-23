@@ -5,10 +5,10 @@ const db = require('./database');
 module.exports = function(passport) {
     passport.use(new LocalStrategy(
         { usernameField: 'username' },
-        async (username, password, done) => {
+        (username, password, done) => {
             try {
-                const user = await db.queryOne(
-                    'SELECT * FROM staff_users WHERE username = ? AND is_active = TRUE',
+                const user = db.queryOne(
+                    'SELECT * FROM staff_users WHERE username = ? AND is_active = 1',
                     [username]
                 );
 
@@ -16,14 +16,14 @@ module.exports = function(passport) {
                     return done(null, false, { message: 'Invalid username or password' });
                 }
 
-                const isMatch = await bcrypt.compare(password, user.password);
+                const isMatch = bcrypt.compareSync(password, user.password);
                 if (!isMatch) {
                     return done(null, false, { message: 'Invalid username or password' });
                 }
 
                 // Update last login
-                await db.query(
-                    'UPDATE staff_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+                db.query(
+                    'UPDATE staff_users SET last_login = datetime("now") WHERE id = ?',
                     [user.id]
                 );
 
@@ -38,9 +38,9 @@ module.exports = function(passport) {
         done(null, user.id);
     });
 
-    passport.deserializeUser(async (id, done) => {
+    passport.deserializeUser((id, done) => {
         try {
-            const user = await db.queryOne(
+            const user = db.queryOne(
                 `SELECT su.*, st.name as tier_name, st.color as tier_color, st.permissions as tier_permissions
                  FROM staff_users su
                  LEFT JOIN staff_tiers st ON su.tier = st.tier_level

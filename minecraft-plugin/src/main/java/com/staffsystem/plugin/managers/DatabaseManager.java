@@ -17,43 +17,20 @@ public class DatabaseManager {
 
     private final StaffSystemPlugin plugin;
     private HikariDataSource dataSource;
-    private boolean useMysql;
 
     public DatabaseManager(StaffSystemPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void initialize() {
-        String dbType = plugin.getConfig().getString("database.type", "sqlite").toLowerCase();
-        useMysql = dbType.equals("mysql");
-
         HikariConfig config = new HikariConfig();
 
-        if (useMysql) {
-            String host = plugin.getConfig().getString("database.mysql.host", "localhost");
-            int port = plugin.getConfig().getInt("database.mysql.port", 3306);
-            String database = plugin.getConfig().getString("database.mysql.database", "staffsystem");
-            String username = plugin.getConfig().getString("database.mysql.username", "root");
-            String password = plugin.getConfig().getString("database.mysql.password", "");
-
-            config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + 
-                "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-            config.setUsername(username);
-            config.setPassword(password);
-            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-
-            config.setMaximumPoolSize(plugin.getConfig().getInt("database.mysql.pool.maximum-pool-size", 10));
-            config.setMinimumIdle(plugin.getConfig().getInt("database.mysql.pool.minimum-idle", 2));
-            config.setConnectionTimeout(plugin.getConfig().getLong("database.mysql.pool.connection-timeout", 30000));
-            config.setIdleTimeout(plugin.getConfig().getLong("database.mysql.pool.idle-timeout", 600000));
-            config.setMaxLifetime(plugin.getConfig().getLong("database.mysql.pool.max-lifetime", 1800000));
-        } else {
-            File dbFile = new File(plugin.getDataFolder(), 
-                plugin.getConfig().getString("database.sqlite.file", "database.db"));
-            config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
-            config.setDriverClassName("org.sqlite.JDBC");
-            config.setMaximumPoolSize(1);
-        }
+        // SQLite only - no setup required!
+        File dbFile = new File(plugin.getDataFolder(), 
+            plugin.getConfig().getString("database.file", "database.db"));
+        config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
+        config.setDriverClassName("org.sqlite.JDBC");
+        config.setMaximumPoolSize(1);
 
         config.setPoolName("StaffSystem-Pool");
         config.addDataSourceProperty("cachePrepStmts", "true");
@@ -63,7 +40,7 @@ public class DatabaseManager {
         try {
             dataSource = new HikariDataSource(config);
             createTables();
-            plugin.getLogger().info("Database connection established successfully!");
+            plugin.getLogger().info("SQLite database initialized successfully!");
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to initialize database: " + e.getMessage());
             e.printStackTrace();
@@ -71,27 +48,7 @@ public class DatabaseManager {
     }
 
     private void createTables() {
-        String punishmentsTable = useMysql ?
-            """
-            CREATE TABLE IF NOT EXISTS punishments (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                player_uuid VARCHAR(36) NOT NULL,
-                player_name VARCHAR(16) NOT NULL,
-                staff_uuid VARCHAR(36) NOT NULL,
-                staff_name VARCHAR(16) NOT NULL,
-                type VARCHAR(20) NOT NULL,
-                reason TEXT,
-                timestamp BIGINT NOT NULL,
-                duration BIGINT NOT NULL,
-                expiration BIGINT NOT NULL,
-                active BOOLEAN DEFAULT TRUE,
-                server VARCHAR(50) DEFAULT 'main',
-                INDEX idx_player_uuid (player_uuid),
-                INDEX idx_active (active),
-                INDEX idx_type (type)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """ :
-            """
+        String punishmentsTable = """
             CREATE TABLE IF NOT EXISTS punishments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 player_uuid TEXT NOT NULL,
@@ -108,18 +65,7 @@ public class DatabaseManager {
             );
             """;
 
-        String staffTable = useMysql ?
-            """
-            CREATE TABLE IF NOT EXISTS staff (
-                uuid VARCHAR(36) PRIMARY KEY,
-                name VARCHAR(16) NOT NULL,
-                staff_rank VARCHAR(50) DEFAULT 'Staff',
-                tier INT DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """ :
-            """
+        String staffTable = """
             CREATE TABLE IF NOT EXISTS staff (
                 uuid TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -130,10 +76,18 @@ public class DatabaseManager {
             );
             """;
 
+        // Create indexes for better query performance
+        String indexPlayerUuid = "CREATE INDEX IF NOT EXISTS idx_player_uuid ON punishments(player_uuid);";
+        String indexActive = "CREATE INDEX IF NOT EXISTS idx_active ON punishments(active);";
+        String indexType = "CREATE INDEX IF NOT EXISTS idx_type ON punishments(type);";
+
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(punishmentsTable);
             stmt.execute(staffTable);
+            stmt.execute(indexPlayerUuid);
+            stmt.execute(indexActive);
+            stmt.execute(indexType);
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create tables: " + e.getMessage());
             e.printStackTrace();

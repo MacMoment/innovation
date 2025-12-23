@@ -6,16 +6,16 @@ const db = require('../utils/database');
 const { ensureAuthenticated, ensureTier, ensurePermission } = require('../middleware/auth');
 
 // Staff list
-router.get('/', ensureAuthenticated, ensureTier(3), async (req, res) => {
+router.get('/', ensureAuthenticated, ensureTier(3), (req, res) => {
     try {
-        const staffMembers = await db.query(`
+        const staffMembers = db.query(`
             SELECT su.*, st.name as tier_name, st.color as tier_color
             FROM staff_users su
             LEFT JOIN staff_tiers st ON su.tier = st.tier_level
             ORDER BY su.tier DESC, su.username ASC
         `);
 
-        const tiers = await db.query('SELECT * FROM staff_tiers ORDER BY tier_level ASC');
+        const tiers = db.query('SELECT * FROM staff_tiers ORDER BY tier_level ASC');
 
         res.render('pages/staff', {
             title: 'Staff Management',
@@ -30,9 +30,9 @@ router.get('/', ensureAuthenticated, ensureTier(3), async (req, res) => {
 });
 
 // Edit staff member
-router.get('/edit/:id', ensureAuthenticated, ensureTier(4), async (req, res) => {
+router.get('/edit/:id', ensureAuthenticated, ensureTier(4), (req, res) => {
     try {
-        const staffMember = await db.queryOne(`
+        const staffMember = db.queryOne(`
             SELECT su.*, st.name as tier_name
             FROM staff_users su
             LEFT JOIN staff_tiers st ON su.tier = st.tier_level
@@ -50,7 +50,7 @@ router.get('/edit/:id', ensureAuthenticated, ensureTier(4), async (req, res) => 
             return res.redirect('/staff');
         }
 
-        const tiers = await db.query('SELECT * FROM staff_tiers WHERE tier_level <= ? ORDER BY tier_level ASC', 
+        const tiers = db.query('SELECT * FROM staff_tiers WHERE tier_level <= ? ORDER BY tier_level ASC', 
             [req.user.tier]);
 
         res.render('pages/staff-edit', {
@@ -73,7 +73,7 @@ router.post('/edit/:id',
         body('email').isEmail().normalizeEmail(),
         body('tier').isInt({ min: 1, max: 5 })
     ],
-    async (req, res) => {
+    (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('error_msg', 'Invalid input');
@@ -81,7 +81,7 @@ router.post('/edit/:id',
         }
 
         try {
-            const staffMember = await db.queryOne('SELECT * FROM staff_users WHERE id = ?', [req.params.id]);
+            const staffMember = db.queryOne('SELECT * FROM staff_users WHERE id = ?', [req.params.id]);
             
             if (!staffMember) {
                 req.flash('error_msg', 'Staff member not found');
@@ -102,26 +102,24 @@ router.post('/edit/:id',
                 return res.redirect(`/staff/edit/${req.params.id}`);
             }
 
-            let updateQuery = `
-                UPDATE staff_users SET 
-                    email = ?, tier = ?, minecraft_uuid = ?, discord_id = ?, is_active = ?
-            `;
-            let params = [email, tier, minecraft_uuid || null, discord_id || null, is_active === 'on'];
-
             // Update password if provided
             if (newPassword && newPassword.length >= 6) {
-                const hashedPassword = await bcrypt.hash(newPassword, 10);
-                updateQuery += ', password = ?';
-                params.push(hashedPassword);
+                const hashedPassword = bcrypt.hashSync(newPassword, 10);
+                db.query(`
+                    UPDATE staff_users SET 
+                        email = ?, tier = ?, minecraft_uuid = ?, discord_id = ?, is_active = ?, password = ?
+                    WHERE id = ?
+                `, [email, tier, minecraft_uuid || null, discord_id || null, is_active === 'on' ? 1 : 0, hashedPassword, req.params.id]);
+            } else {
+                db.query(`
+                    UPDATE staff_users SET 
+                        email = ?, tier = ?, minecraft_uuid = ?, discord_id = ?, is_active = ?
+                    WHERE id = ?
+                `, [email, tier, minecraft_uuid || null, discord_id || null, is_active === 'on' ? 1 : 0, req.params.id]);
             }
 
-            updateQuery += ' WHERE id = ?';
-            params.push(req.params.id);
-
-            await db.query(updateQuery, params);
-
             // Log activity
-            await db.query(`
+            db.query(`
                 INSERT INTO activity_log (staff_user_id, action, details, ip_address)
                 VALUES (?, ?, ?, ?)
             `, [req.user.id, 'UPDATE_STAFF', `Updated staff: ${staffMember.username}`, req.ip]);
@@ -137,9 +135,9 @@ router.post('/edit/:id',
 );
 
 // Delete staff member
-router.post('/delete/:id', ensureAuthenticated, ensureTier(4), async (req, res) => {
+router.post('/delete/:id', ensureAuthenticated, ensureTier(4), (req, res) => {
     try {
-        const staffMember = await db.queryOne('SELECT * FROM staff_users WHERE id = ?', [req.params.id]);
+        const staffMember = db.queryOne('SELECT * FROM staff_users WHERE id = ?', [req.params.id]);
         
         if (!staffMember) {
             req.flash('error_msg', 'Staff member not found');
@@ -158,10 +156,10 @@ router.post('/delete/:id', ensureAuthenticated, ensureTier(4), async (req, res) 
             return res.redirect('/staff');
         }
 
-        await db.query('DELETE FROM staff_users WHERE id = ?', [req.params.id]);
+        db.query('DELETE FROM staff_users WHERE id = ?', [req.params.id]);
 
         // Log activity
-        await db.query(`
+        db.query(`
             INSERT INTO activity_log (staff_user_id, action, details, ip_address)
             VALUES (?, ?, ?, ?)
         `, [req.user.id, 'DELETE_STAFF', `Deleted staff: ${staffMember.username}`, req.ip]);
@@ -176,9 +174,9 @@ router.post('/delete/:id', ensureAuthenticated, ensureTier(4), async (req, res) 
 });
 
 // Tier management
-router.get('/tiers', ensureAuthenticated, ensureTier(5), async (req, res) => {
+router.get('/tiers', ensureAuthenticated, ensureTier(5), (req, res) => {
     try {
-        const tiers = await db.query('SELECT * FROM staff_tiers ORDER BY tier_level ASC');
+        const tiers = db.query('SELECT * FROM staff_tiers ORDER BY tier_level ASC');
         
         res.render('pages/tiers', {
             title: 'Tier Management',
@@ -192,11 +190,11 @@ router.get('/tiers', ensureAuthenticated, ensureTier(5), async (req, res) => {
 });
 
 // Update tier
-router.post('/tiers/:id', ensureAuthenticated, ensureTier(5), async (req, res) => {
+router.post('/tiers/:id', ensureAuthenticated, ensureTier(5), (req, res) => {
     try {
         const { name, color, discord_role_id, permissions } = req.body;
         
-        await db.query(`
+        db.query(`
             UPDATE staff_tiers SET name = ?, color = ?, discord_role_id = ?, permissions = ?
             WHERE id = ?
         `, [name, color, discord_role_id || null, permissions, req.params.id]);

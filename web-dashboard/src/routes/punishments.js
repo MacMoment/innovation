@@ -4,7 +4,7 @@ const db = require('../utils/database');
 const { ensureAuthenticated, ensurePermission } = require('../middleware/auth');
 
 // Punishments list
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', ensureAuthenticated, (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
@@ -23,9 +23,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         }
 
         if (status === 'active') {
-            whereClause += ' AND active = TRUE';
+            whereClause += ' AND active = 1';
         } else if (status === 'inactive') {
-            whereClause += ' AND active = FALSE';
+            whereClause += ' AND active = 0';
         }
 
         if (search) {
@@ -35,7 +35,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         }
 
         // Get total count
-        const countResult = await db.queryOne(
+        const countResult = db.queryOne(
             `SELECT COUNT(*) as total FROM punishments WHERE ${whereClause}`,
             params
         );
@@ -43,7 +43,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         const totalPages = Math.ceil(totalCount / limit);
 
         // Get punishments
-        const punishments = await db.query(
+        const punishments = db.query(
             `SELECT * FROM punishments WHERE ${whereClause} ORDER BY timestamp DESC LIMIT ? OFFSET ?`,
             [...params, limit, offset]
         );
@@ -64,9 +64,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 // View single punishment
-router.get('/view/:id', ensureAuthenticated, async (req, res) => {
+router.get('/view/:id', ensureAuthenticated, (req, res) => {
     try {
-        const punishment = await db.queryOne('SELECT * FROM punishments WHERE id = ?', [req.params.id]);
+        const punishment = db.queryOne('SELECT * FROM punishments WHERE id = ?', [req.params.id]);
         
         if (!punishment) {
             req.flash('error_msg', 'Punishment not found');
@@ -74,7 +74,7 @@ router.get('/view/:id', ensureAuthenticated, async (req, res) => {
         }
 
         // Get player history
-        const playerHistory = await db.query(
+        const playerHistory = db.query(
             'SELECT * FROM punishments WHERE player_uuid = ? ORDER BY timestamp DESC',
             [punishment.player_uuid]
         );
@@ -92,19 +92,19 @@ router.get('/view/:id', ensureAuthenticated, async (req, res) => {
 });
 
 // Revoke punishment
-router.post('/revoke/:id', ensureAuthenticated, ensurePermission('ban'), async (req, res) => {
+router.post('/revoke/:id', ensureAuthenticated, ensurePermission('ban'), (req, res) => {
     try {
-        const punishment = await db.queryOne('SELECT * FROM punishments WHERE id = ?', [req.params.id]);
+        const punishment = db.queryOne('SELECT * FROM punishments WHERE id = ?', [req.params.id]);
         
         if (!punishment) {
             req.flash('error_msg', 'Punishment not found');
             return res.redirect('/punishments');
         }
 
-        await db.query('UPDATE punishments SET active = FALSE WHERE id = ?', [req.params.id]);
+        db.query('UPDATE punishments SET active = 0 WHERE id = ?', [req.params.id]);
 
         // Log activity
-        await db.query(`
+        db.query(`
             INSERT INTO activity_log (staff_user_id, action, details, ip_address)
             VALUES (?, ?, ?, ?)
         `, [req.user.id, 'REVOKE_PUNISHMENT', 
@@ -120,11 +120,11 @@ router.post('/revoke/:id', ensureAuthenticated, ensurePermission('ban'), async (
 });
 
 // Search player
-router.get('/player/:name', ensureAuthenticated, async (req, res) => {
+router.get('/player/:name', ensureAuthenticated, (req, res) => {
     try {
         const playerName = req.params.name;
         
-        const punishments = await db.query(
+        const punishments = db.query(
             'SELECT * FROM punishments WHERE player_name = ? ORDER BY timestamp DESC',
             [playerName]
         );

@@ -1,29 +1,10 @@
 # StaffSystem Configuration
 # Advanced Staff Management Plugin
 
-# Database Configuration
+# Database Configuration (SQLite - no setup required!)
+# The database file is created automatically in the plugin folder
 database:
-  # Database type: mysql or sqlite
-  type: mysql
-  
-  # MySQL Settings (only if type is mysql)
-  mysql:
-    host: localhost
-    port: 3306
-    database: staffsystem
-    username: root
-    password: password
-    # Connection pool settings
-    pool:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-  
-  # SQLite Settings (only if type is sqlite)
-  sqlite:
-    file: database.db
+  file: database.db
 
 # Web Dashboard Integration
 web-integration:

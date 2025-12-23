@@ -1,6 +1,6 @@
 # StaffSystem - Complete Staff Management Solution
 
-A comprehensive staff management system for Minecraft servers, featuring a Minecraft plugin, web dashboard, and Discord bot integration.
+A comprehensive staff management system for Minecraft servers, featuring a Minecraft plugin, web dashboard, and Discord bot integration. **Zero database setup required** - uses SQLite for automatic, hassle-free data storage.
 
 ## 🌟 Features
 
@@ -11,7 +11,7 @@ A comprehensive staff management system for Minecraft servers, featuring a Minec
 - **GUI Interface**: Beautiful inventory-based menus for all actions
 - **Staff Chat**: Private communication channel for staff members
 - **History Tracking**: Complete punishment history for all players
-- **Database Support**: MySQL and SQLite support
+- **SQLite Database**: No setup required - works out of the box
 - **Web Integration**: Real-time sync with web dashboard
 - **Discord Notifications**: Send punishment notifications to Discord
 
@@ -54,20 +54,11 @@ A comprehensive staff management system for Minecraft servers, featuring a Minec
 ### Prerequisites
 - Java 17+ (for Minecraft plugin)
 - Node.js 18+ (for web dashboard and Discord bot)
-- MySQL 8.0+ (recommended) or SQLite
 - A Minecraft server running Spigot/Paper 1.20+
 
-### 1. Database Setup
+**No database setup required!** SQLite is used automatically.
 
-Create a MySQL database:
-```sql
-CREATE DATABASE staffsystem;
-CREATE USER 'staffsystem'@'localhost' IDENTIFIED BY 'your-secure-password';
-GRANT ALL PRIVILEGES ON staffsystem.* TO 'staffsystem'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-### 2. Minecraft Plugin Installation
+### 1. Minecraft Plugin Installation
 
 1. Build the plugin:
 ```bash
@@ -79,16 +70,11 @@ mvn clean package
 
 3. Start your server to generate config files
 
-4. Edit `plugins/StaffSystem/config.yml`:
+4. Edit `plugins/StaffSystem/config.yml` to customize settings (optional):
 ```yaml
+# The database is automatically created - no configuration needed!
 database:
-  type: mysql
-  mysql:
-    host: localhost
-    port: 3306
-    database: staffsystem
-    username: staffsystem
-    password: your-secure-password
+  file: database.db
 
 web-integration:
   enabled: true
@@ -98,7 +84,7 @@ web-integration:
 
 5. Restart the server
 
-### 3. Web Dashboard Installation
+### 2. Web Dashboard Installation
 
 1. Install dependencies:
 ```bash
@@ -114,13 +100,9 @@ cp .env.example .env
 3. Edit `.env` with your configuration:
 ```env
 PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=staffsystem
-DB_USER=staffsystem
-DB_PASSWORD=your-secure-password
 SESSION_SECRET=your-super-secret-session-key
 API_KEY=your-secret-api-key-here
+DB_PATH=./data/staffsystem.db
 ```
 
 4. Start the server:
@@ -132,7 +114,7 @@ npm start
    - Default login: `admin` / `admin123`
    - **Change the default password immediately!**
 
-### 4. Discord Bot Installation
+### 3. Discord Bot Installation
 
 1. Create a Discord application at [Discord Developer Portal](https://discord.com/developers/applications)
 
@@ -155,11 +137,7 @@ cp .env.example .env
 ```env
 DISCORD_TOKEN=your-bot-token
 GUILD_ID=your-guild-id
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=staffsystem
-DB_USER=staffsystem
-DB_PASSWORD=your-secure-password
+DB_PATH=../web-dashboard/data/staffsystem.db
 LOG_CHANNEL_ID=your-log-channel-id
 STAFF_CHANNEL_ID=your-staff-channel-id
 ```

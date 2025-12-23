@@ -35,7 +35,7 @@ router.post('/register',
         body('password').isLength({ min: 6 }),
         body('tier').isInt({ min: 1, max: 5 })
     ],
-    async (req, res) => {
+    (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('error_msg', 'Invalid input. Please check all fields.');
@@ -46,7 +46,7 @@ router.post('/register',
             const { username, email, password, tier, minecraft_uuid, discord_id } = req.body;
 
             // Check if user exists
-            const existing = await db.queryOne(
+            const existing = db.queryOne(
                 'SELECT id FROM staff_users WHERE username = ? OR email = ?',
                 [username, email]
             );
@@ -63,16 +63,16 @@ router.post('/register',
             }
 
             // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = bcrypt.hashSync(password, 10);
 
             // Create user
-            await db.query(`
+            db.query(`
                 INSERT INTO staff_users (username, email, password, tier, minecraft_uuid, discord_id)
                 VALUES (?, ?, ?, ?, ?, ?)
             `, [username, email, hashedPassword, tier, minecraft_uuid || null, discord_id || null]);
 
             // Log activity
-            await db.query(`
+            db.query(`
                 INSERT INTO activity_log (staff_user_id, action, details, ip_address)
                 VALUES (?, ?, ?, ?)
             `, [req.user.id, 'CREATE_STAFF', `Created staff account: ${username}`, req.ip]);
@@ -116,7 +116,7 @@ router.post('/change-password',
             return true;
         })
     ],
-    async (req, res) => {
+    (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('error_msg', errors.array()[0].msg);
@@ -127,8 +127,8 @@ router.post('/change-password',
             const { currentPassword, newPassword } = req.body;
 
             // Verify current password
-            const user = await db.queryOne('SELECT password FROM staff_users WHERE id = ?', [req.user.id]);
-            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            const user = db.queryOne('SELECT password FROM staff_users WHERE id = ?', [req.user.id]);
+            const isMatch = bcrypt.compareSync(currentPassword, user.password);
             
             if (!isMatch) {
                 req.flash('error_msg', 'Current password is incorrect');
@@ -136,11 +136,11 @@ router.post('/change-password',
             }
 
             // Update password
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await db.query('UPDATE staff_users SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
+            const hashedPassword = bcrypt.hashSync(newPassword, 10);
+            db.query('UPDATE staff_users SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
 
             // Log activity
-            await db.query(`
+            db.query(`
                 INSERT INTO activity_log (staff_user_id, action, details, ip_address)
                 VALUES (?, ?, ?, ?)
             `, [req.user.id, 'CHANGE_PASSWORD', 'Changed password', req.ip]);

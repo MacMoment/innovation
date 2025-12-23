@@ -4,7 +4,7 @@ const db = require('../utils/database');
 const { apiAuth } = require('../middleware/auth');
 
 // Webhook endpoint for punishment notifications from Minecraft plugin
-router.post('/punishment', apiAuth, async (req, res) => {
+router.post('/punishment', apiAuth, (req, res) => {
     try {
         const {
             type,
@@ -20,18 +20,18 @@ router.post('/punishment', apiAuth, async (req, res) => {
         } = req.body;
 
         // Save to database
-        await db.query(`
+        db.query(`
             INSERT INTO punishments 
             (player_uuid, player_name, staff_uuid, staff_name, type, reason, timestamp, duration, expiration, active, server)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             playerUuid, playerName, staffUuid, staffName, punishmentType, reason,
-            timestamp, duration, duration === -1 ? -1 : timestamp + duration, true, server || 'main'
+            timestamp, duration, duration === -1 ? -1 : timestamp + duration, 1, server || 'main'
         ]);
 
         // Send to Discord webhook if configured
         if (process.env.DISCORD_WEBHOOK_URL) {
-            await sendDiscordNotification({
+            sendDiscordNotification({
                 type: 'punishment',
                 punishmentType,
                 playerName,
@@ -42,7 +42,7 @@ router.post('/punishment', apiAuth, async (req, res) => {
         }
 
         // Log activity
-        await db.query(`
+        db.query(`
             INSERT INTO activity_log (action, details, ip_address)
             VALUES (?, ?, ?)
         `, ['WEBHOOK_PUNISHMENT', `${punishmentType} issued to ${playerName} by ${staffName}`, req.ip]);
@@ -55,13 +55,13 @@ router.post('/punishment', apiAuth, async (req, res) => {
 });
 
 // Webhook endpoint for freeze notifications
-router.post('/freeze', apiAuth, async (req, res) => {
+router.post('/freeze', apiAuth, (req, res) => {
     try {
         const { playerName, staffName, frozen, timestamp } = req.body;
 
         // Send to Discord webhook if configured
         if (process.env.DISCORD_WEBHOOK_URL) {
-            await sendDiscordNotification({
+            sendDiscordNotification({
                 type: 'freeze',
                 playerName,
                 staffName,
@@ -70,7 +70,7 @@ router.post('/freeze', apiAuth, async (req, res) => {
         }
 
         // Log activity
-        await db.query(`
+        db.query(`
             INSERT INTO activity_log (action, details, ip_address)
             VALUES (?, ?, ?)
         `, ['WEBHOOK_FREEZE', `${playerName} ${frozen ? 'frozen' : 'unfrozen'} by ${staffName}`, req.ip]);
@@ -92,7 +92,7 @@ async function sendDiscordNotification(data) {
     if (data.type === 'punishment') {
         const color = getPunishmentColor(data.punishmentType);
         embed = {
-            title: `${data.punishmentType} - ${data.playerName}`,
+            title: `${data.punishmentType.replace('_', ' ')} - ${data.playerName}`,
             color: color,
             fields: [
                 { name: 'Player', value: data.playerName, inline: true },
