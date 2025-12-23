@@ -23,7 +23,14 @@ const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
+// Disable trust proxy to prevent Express from using X-Forwarded-* headers
+// This ensures HTTP connections are not incorrectly detected as HTTPS
+// Set to false to explicitly not trust any proxy headers when running HTTP-only
+app.set('trust proxy', process.env.FORCE_HTTPS === 'true' ? 1 : false);
+
 // Security middleware
+// Configure based on FORCE_HTTPS setting
+const isHttpsEnabled = process.env.FORCE_HTTPS === 'true';
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -32,6 +39,8 @@ app.use(helmet({
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
             imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
+            // Only upgrade insecure requests when HTTPS is enabled
+            upgradeInsecureRequests: isHttpsEnabled ? [] : null,
         },
     },
     // Disable HSTS to allow HTTP connections (don't force HTTPS)
@@ -79,11 +88,13 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'default-secret-change-me',
     resave: false,
     saveUninitialized: false,
+    proxy: process.env.FORCE_HTTPS === 'true',
     cookie: {
         // Allow HTTP by setting secure to false unless explicitly enabled via FORCE_HTTPS=true
         secure: process.env.FORCE_HTTPS === 'true',
         httpOnly: true,
-        sameSite: 'strict',
+        // Use 'lax' to allow cookies during same-site navigations (e.g., form submissions, redirects)
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));

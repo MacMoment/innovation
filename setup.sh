@@ -186,15 +186,17 @@ configure_web_dashboard() {
     # Protocol
     echo ""
     info "Choose the protocol for your web dashboard:"
-    echo "  1) HTTP (for local/development use)"
-    echo "  2) HTTPS (for production with SSL/reverse proxy)"
+    echo "  1) HTTP only - recommended for most use cases (no HTTPS redirects)"
+    echo "  2) HTTPS (only if you have SSL configured via reverse proxy)"
     read -p "Select [1]: " protocol_choice
     protocol_choice=${protocol_choice:-1}
     
     if [ "$protocol_choice" = "2" ]; then
         WEB_PROTOCOL="https"
+        warning "Note: HTTPS requires a reverse proxy with SSL certificates (e.g., nginx, Caddy)"
     else
         WEB_PROTOCOL="http"
+        info "HTTP mode selected - the dashboard will only use HTTP (no HTTPS)"
     fi
     
     # Host/Domain
@@ -254,8 +256,9 @@ configure_web_dashboard() {
 PORT=$WEB_PORT
 NODE_ENV=$NODE_ENV
 
-# Force HTTPS - set to true to require HTTPS for session cookies
-# Only enable if you have HTTPS configured (via reverse proxy or SSL certificates)
+# HTTPS Configuration
+# Set to 'true' ONLY if you have a reverse proxy (nginx, Caddy) handling SSL
+# Set to 'false' (default) to use HTTP only - no HTTPS redirects will occur
 FORCE_HTTPS=$FORCE_HTTPS
 
 # Session Secret (keep this secure!)
@@ -268,7 +271,7 @@ API_KEY=$API_KEY
 DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL
 
 # Website URL (for links in Discord messages)
-# Supports both HTTP and HTTPS - configure based on your setup
+# Use the same protocol (HTTP/HTTPS) you configured above
 WEBSITE_URL=$WEBSITE_URL
 
 # Database file path (SQLite - no setup required!)
@@ -391,14 +394,16 @@ build_minecraft_plugin() {
             info "Building Minecraft plugin..."
             cd "$SCRIPT_DIR/minecraft-plugin"
             
-            if mvn clean package; then
+            if mvn clean package -q; then
                 if [ -f "target/StaffSystem-1.0.0.jar" ]; then
                     success "Plugin built successfully!"
                     echo ""
                     info "The plugin JAR is located at:"
                     echo "  $SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar"
                     echo ""
-                    info "Copy this file to your Minecraft server's plugins folder."
+                    
+                    # Offer to download the plugin
+                    download_plugin
                 else
                     warning "Build completed but JAR file not found. Check Maven output above."
                 fi
@@ -412,6 +417,76 @@ build_minecraft_plugin() {
         warning "Maven is not installed. Skipping plugin build."
         info "To build manually: cd minecraft-plugin && mvn clean package"
     fi
+}
+
+# Download plugin to user's device
+download_plugin() {
+    local plugin_path="$SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar"
+    
+    if [ ! -f "$plugin_path" ]; then
+        warning "Plugin JAR not found. Build the plugin first."
+        return 1
+    fi
+    
+    echo ""
+    info "Plugin download options:"
+    echo "  1) Copy to a specific directory"
+    echo "  2) Copy to current user's Downloads folder"
+    echo "  3) Skip download (I'll copy it manually)"
+    read -p "Select [3]: " download_choice
+    download_choice=${download_choice:-3}
+    
+    case "$download_choice" in
+        1)
+            prompt_input "Enter the destination directory path" "" "DOWNLOAD_PATH"
+            if [ -n "$DOWNLOAD_PATH" ]; then
+                # Expand ~ to home directory
+                DOWNLOAD_PATH="${DOWNLOAD_PATH/#\~/$HOME}"
+                
+                if [ -d "$DOWNLOAD_PATH" ]; then
+                    if cp "$plugin_path" "$DOWNLOAD_PATH/StaffSystem-1.0.0.jar"; then
+                        success "Plugin copied to: $DOWNLOAD_PATH/StaffSystem-1.0.0.jar"
+                    else
+                        error "Failed to copy plugin. Check directory permissions."
+                    fi
+                else
+                    warning "Directory does not exist: $DOWNLOAD_PATH"
+                    if prompt_yes_no "Create the directory?" "y"; then
+                        if mkdir -p "$DOWNLOAD_PATH" && cp "$plugin_path" "$DOWNLOAD_PATH/StaffSystem-1.0.0.jar"; then
+                            success "Plugin copied to: $DOWNLOAD_PATH/StaffSystem-1.0.0.jar"
+                        else
+                            error "Failed to create directory or copy plugin."
+                        fi
+                    fi
+                fi
+            fi
+            ;;
+        2)
+            # Try common download directories
+            local downloads_dir=""
+            if [ -d "$HOME/Downloads" ]; then
+                downloads_dir="$HOME/Downloads"
+            elif [ -d "$HOME/download" ]; then
+                downloads_dir="$HOME/download"
+            elif [ -n "$XDG_DOWNLOAD_DIR" ] && [ -d "$XDG_DOWNLOAD_DIR" ]; then
+                downloads_dir="$XDG_DOWNLOAD_DIR"
+            else
+                # Create Downloads folder if it doesn't exist
+                downloads_dir="$HOME/Downloads"
+                mkdir -p "$downloads_dir"
+            fi
+            
+            if cp "$plugin_path" "$downloads_dir/StaffSystem-1.0.0.jar"; then
+                success "Plugin downloaded to: $downloads_dir/StaffSystem-1.0.0.jar"
+            else
+                error "Failed to copy plugin to Downloads folder."
+            fi
+            ;;
+        *)
+            info "Plugin location: $plugin_path"
+            info "Copy this file to your Minecraft server's plugins folder."
+            ;;
+    esac
 }
 
 # Install npm dependencies
@@ -635,6 +710,7 @@ print_final_instructions() {
     echo "Minecraft Plugin:"
     if [ "$MAVEN_AVAILABLE" = true ] && [ -f "$SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar" ]; then
         echo "   JAR: minecraft-plugin/target/StaffSystem-1.0.0.jar"
+        echo "   To download again: ./setup.sh --download-plugin"
     else
         echo "   Build: cd minecraft-plugin && mvn clean package"
     fi
@@ -650,6 +726,7 @@ print_final_instructions() {
     echo -e "${YELLOW}Manual Start Commands:${NC}"
     echo "   Web Dashboard: cd web-dashboard && npm start"
     echo "   Discord Bot:   cd discord-bot && npm start"
+    echo "   Download plugin: ./setup.sh --download-plugin"
     echo "   Run setup.sh again and select 'start services' to auto-start"
     echo ""
     
@@ -658,6 +735,31 @@ print_final_instructions() {
 
 # Main setup flow
 main() {
+    # Handle command-line arguments
+    if [ "$1" = "--download-plugin" ]; then
+        print_banner
+        if [ -f "$SCRIPT_DIR/minecraft-plugin/target/StaffSystem-1.0.0.jar" ]; then
+            download_plugin
+        else
+            warning "Plugin JAR not found."
+            if command_exists mvn; then
+                if prompt_yes_no "Would you like to build the plugin first?" "y"; then
+                    cd "$SCRIPT_DIR/minecraft-plugin"
+                    if mvn clean package -q && [ -f "target/StaffSystem-1.0.0.jar" ]; then
+                        success "Plugin built successfully!"
+                        download_plugin
+                    else
+                        error "Build failed."
+                    fi
+                    cd "$SCRIPT_DIR"
+                fi
+            else
+                error "Maven is not installed. Cannot build the plugin."
+            fi
+        fi
+        exit 0
+    fi
+    
     print_banner
     
     # Check prerequisites
