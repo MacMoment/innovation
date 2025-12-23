@@ -57,7 +57,9 @@ router.post('/register',
             }
 
             // Can't create users with higher tier than yourself
-            if (tier > req.user.tier) {
+            const requestedTier = parseInt(tier, 10);
+            const currentUserTier = parseInt(req.user.tier, 10);
+            if (requestedTier > currentUserTier) {
                 req.flash('error_msg', 'Cannot create user with higher tier than yourself');
                 return res.redirect('/auth/register');
             }

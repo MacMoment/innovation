@@ -57,20 +57,28 @@ module.exports = {
             // Try to assign tier role if configured
             const tierRoles = process.env.TIER_ROLES?.split(',') || [];
             const tierRoleId = tierRoles[staffAccount.tier - 1];
+            let roleAssigned = false;
+            let roleError = null;
             
             if (tierRoleId) {
                 try {
                     const member = await interaction.guild.members.fetch(discordId);
                     await member.roles.add(tierRoleId);
-                } catch (roleError) {
-                    console.error('Failed to assign role:', roleError);
+                    roleAssigned = true;
+                } catch (err) {
+                    console.error('Failed to assign role:', err);
+                    roleError = err.message;
                 }
             }
 
-            const embed = createSuccessEmbed(
-                'Account Linked',
-                `Your Discord account has been linked to staff account **${username}**.\n\nTier: ${staffAccount.tier}`
-            );
+            let responseMessage = `Your Discord account has been linked to staff account **${username}**.\n\nTier: ${staffAccount.tier}`;
+            if (tierRoleId && !roleAssigned) {
+                responseMessage += `\n\n⚠️ Note: Could not assign tier role automatically. Please contact an admin.`;
+            } else if (roleAssigned) {
+                responseMessage += `\n\n✅ Tier role assigned.`;
+            }
+
+            const embed = createSuccessEmbed('Account Linked', responseMessage);
             await interaction.editReply({ embeds: [embed] });
 
             // Log the action

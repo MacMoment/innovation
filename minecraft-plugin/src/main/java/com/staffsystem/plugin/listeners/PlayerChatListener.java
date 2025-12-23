@@ -28,24 +28,20 @@ public class PlayerChatListener implements Listener {
             return;
         }
         
-        // Check for mute (we need to handle this synchronously for the event)
-        try {
-            Punishment mute = plugin.getPunishmentManager().getActiveMute(player.getUniqueId()).get();
+        // Check for mute using cache (non-blocking)
+        Punishment mute = plugin.getPunishmentManager().getCachedMute(player.getUniqueId());
+        
+        if (mute != null && !mute.isExpired()) {
+            event.setCancelled(true);
             
-            if (mute != null && !mute.isExpired()) {
-                event.setCancelled(true);
-                
+            player.sendMessage(plugin.getMessageUtil().color(
+                plugin.getMessageUtil().getMessage("mute.attempt-blocked")));
+            
+            if (!mute.isPermanent()) {
                 player.sendMessage(plugin.getMessageUtil().color(
-                    plugin.getMessageUtil().getMessage("mute.attempt-blocked")));
-                
-                if (!mute.isPermanent()) {
-                    player.sendMessage(plugin.getMessageUtil().color(
-                        plugin.getMessageUtil().getMessage("mute.attempt-remaining")
-                            .replace("{remaining}", formatRemainingTime(mute.getRemainingTime()))));
-                }
+                    plugin.getMessageUtil().getMessage("mute.attempt-remaining")
+                        .replace("{remaining}", formatRemainingTime(mute.getRemainingTime()))));
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Error checking mute status: " + e.getMessage());
         }
     }
 

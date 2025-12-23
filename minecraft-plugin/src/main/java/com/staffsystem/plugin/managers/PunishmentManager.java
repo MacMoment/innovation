@@ -11,15 +11,52 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PunishmentManager {
 
     private final StaffSystemPlugin plugin;
+    // Cache for active mutes to avoid blocking database calls in chat events
+    private final Map<UUID, Punishment> muteCache = new ConcurrentHashMap<>();
 
     public PunishmentManager(StaffSystemPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Get cached mute status for a player (non-blocking).
+     * Returns null if player is not muted or mute has expired.
+     */
+    public Punishment getCachedMute(UUID playerUuid) {
+        Punishment mute = muteCache.get(playerUuid);
+        if (mute != null && mute.isExpired()) {
+            muteCache.remove(playerUuid);
+            return null;
+        }
+        return mute;
+    }
+
+    /**
+     * Load mute status into cache when player joins.
+     */
+    public void loadMuteCache(UUID playerUuid) {
+        getActiveMute(playerUuid).thenAccept(mute -> {
+            if (mute != null && !mute.isExpired()) {
+                muteCache.put(playerUuid, mute);
+            } else {
+                muteCache.remove(playerUuid);
+            }
+        });
+    }
+
+    /**
+     * Clear mute cache when player leaves.
+     */
+    public void clearMuteCache(UUID playerUuid) {
+        muteCache.remove(playerUuid);
     }
 
     public CompletableFuture<Boolean> ban(Player target, Player staff, String reason, long duration) {
@@ -106,6 +143,9 @@ public class PunishmentManager {
 
         return plugin.getDatabaseManager().savePunishment(punishment).thenApply(saved -> {
             if (saved != null) {
+                // Update mute cache
+                muteCache.put(targetUuid, saved);
+                
                 // Notify player
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     target.sendMessage(plugin.getMessageUtil().color(
@@ -141,6 +181,9 @@ public class PunishmentManager {
 
         return plugin.getDatabaseManager().savePunishment(punishment).thenApply(saved -> {
             if (saved != null) {
+                // Update mute cache if player comes online later
+                muteCache.put(targetUuid, saved);
+                
                 // Broadcast
                 broadcastPunishment(saved);
                 
@@ -154,8 +197,14 @@ public class PunishmentManager {
     }
 
     public CompletableFuture<Boolean> unmute(String playerName, Player staff) {
+        @SuppressWarnings("deprecation")
         OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
-        return plugin.getDatabaseManager().unmute(target.getUniqueId());
+        UUID targetUuid = target.getUniqueId();
+        
+        // Clear mute cache
+        muteCache.remove(targetUuid);
+        
+        return plugin.getDatabaseManager().unmute(targetUuid);
     }
 
     public CompletableFuture<Boolean> kick(Player target, Player staff, String reason) {

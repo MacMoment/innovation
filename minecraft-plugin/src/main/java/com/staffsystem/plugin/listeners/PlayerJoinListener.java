@@ -36,6 +36,9 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         
+        // Load mute cache for this player
+        plugin.getPunishmentManager().loadMuteCache(player.getUniqueId());
+        
         // Check for active mute and notify
         plugin.getPunishmentManager().getActiveMute(player.getUniqueId())
             .thenAccept(mute -> {

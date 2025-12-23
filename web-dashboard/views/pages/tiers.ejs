@@ -7,7 +7,14 @@
 </div>
 
 <div class="row g-4">
-    ${tiers.map(tier => `
+    ${tiers.map(tier => {
+        let permissionsJson = '{}';
+        try {
+            permissionsJson = JSON.stringify(JSON.parse(tier.permissions || '{}'), null, 2);
+        } catch (e) {
+            permissionsJson = '{}';
+        }
+        return `
     <div class="col-md-6 col-lg-4">
         <div class="card">
             <div class="card-header" style="border-left: 4px solid ${tier.color}">
@@ -33,7 +40,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Permissions (JSON)</label>
-                        <textarea name="permissions" class="form-control" rows="4">${JSON.stringify(JSON.parse(tier.permissions || '{}'), null, 2)}</textarea>
+                        <textarea name="permissions" class="form-control" rows="4">${permissionsJson}</textarea>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-sm">
@@ -43,6 +50,6 @@
             </div>
         </div>
     </div>
-    `).join('')}
+    `;}).join('')}
 </div>
 ` }) %>

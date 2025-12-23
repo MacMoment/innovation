@@ -300,7 +300,14 @@
         
         <div class="user-info">
             <div class="d-flex align-items-center gap-2">
-                <img src="https://crafatar.com/avatars/<%= user.minecraft_uuid || '00000000-0000-0000-0000-000000000000' %>?size=32&overlay" 
+                <% 
+                // Validate UUID format to prevent injection
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                const safeUuid = (user.minecraft_uuid && uuidRegex.test(user.minecraft_uuid)) 
+                    ? user.minecraft_uuid 
+                    : '00000000-0000-0000-0000-000000000000';
+                %>
+                <img src="https://crafatar.com/avatars/<%= safeUuid %>?size=32&overlay" 
                      alt="Avatar" class="rounded" width="32" height="32">
                 <div>
                     <div class="fw-semibold"><%= user.username %></div>

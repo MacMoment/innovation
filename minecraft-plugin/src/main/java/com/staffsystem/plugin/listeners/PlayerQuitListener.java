@@ -30,5 +30,8 @@ public class PlayerQuitListener implements Listener {
         // Clear GUI data
         plugin.getGuiManager().clearGuiAction(player.getUniqueId());
         plugin.getGuiManager().clearSelectedTarget(player.getUniqueId());
+        
+        // Clear mute cache
+        plugin.getPunishmentManager().clearMuteCache(player.getUniqueId());
     }
 }
