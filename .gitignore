@@ -16,6 +16,8 @@ minecraft-plugin/target/
 
 # Ignore logs
 *.log
+logs/
+*.pid
 
 # Ignore OS files
 .DS_Store
