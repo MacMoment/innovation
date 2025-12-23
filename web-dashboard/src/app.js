@@ -34,6 +34,8 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https://crafatar.com", "https://mc-heads.net"],
         },
     },
+    // Disable HSTS to allow HTTP connections (don't force HTTPS)
+    hsts: false,
 }));
 
 // Rate limiting for API endpoints
@@ -78,7 +80,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        // Allow HTTP by setting secure to false unless explicitly enabled via FORCE_HTTPS=true
+        secure: process.env.FORCE_HTTPS === 'true',
         httpOnly: true,
         sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
