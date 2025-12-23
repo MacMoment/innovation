@@ -1,0 +1,155 @@
+name: StaffSystem
+version: ${project.version}
+main: com.staffsystem.plugin.StaffSystemPlugin
+api-version: '1.20'
+description: Advanced staff management plugin with punishment GUI, freeze system, and web integration
+author: StaffSystem Team
+website: https://staffsystem.example.com
+
+softdepend:
+  - Vault
+  - LuckPerms
+
+commands:
+  staff:
+    description: Opens the staff management GUI
+    usage: /<command>
+    permission: staffsystem.staff
+    
+  ban:
+    description: Ban a player
+    usage: /<command> <player> [duration] [reason]
+    permission: staffsystem.ban
+    
+  tempban:
+    description: Temporarily ban a player
+    usage: /<command> <player> <duration> [reason]
+    permission: staffsystem.tempban
+    
+  unban:
+    description: Unban a player
+    usage: /<command> <player>
+    permission: staffsystem.unban
+    
+  mute:
+    description: Mute a player
+    usage: /<command> <player> [duration] [reason]
+    permission: staffsystem.mute
+    
+  tempmute:
+    description: Temporarily mute a player
+    usage: /<command> <player> <duration> [reason]
+    permission: staffsystem.tempmute
+    
+  unmute:
+    description: Unmute a player
+    usage: /<command> <player>
+    permission: staffsystem.unmute
+    
+  kick:
+    description: Kick a player
+    usage: /<command> <player> [reason]
+    permission: staffsystem.kick
+    
+  warn:
+    description: Warn a player
+    usage: /<command> <player> [reason]
+    permission: staffsystem.warn
+    
+  freeze:
+    description: Freeze/unfreeze a player
+    usage: /<command> <player>
+    permission: staffsystem.freeze
+    
+  staffchat:
+    description: Toggle staff chat or send a message
+    usage: /<command> [message]
+    aliases: [sc]
+    permission: staffsystem.staffchat
+    
+  history:
+    description: View punishment history of a player
+    usage: /<command> <player>
+    permission: staffsystem.history
+    
+  staffsystem:
+    description: Main plugin command
+    usage: /<command> <reload|info>
+    aliases: [ss]
+    permission: staffsystem.admin
+
+permissions:
+  staffsystem.*:
+    description: Grants all StaffSystem permissions
+    default: op
+    children:
+      staffsystem.staff: true
+      staffsystem.ban: true
+      staffsystem.tempban: true
+      staffsystem.unban: true
+      staffsystem.mute: true
+      staffsystem.tempmute: true
+      staffsystem.unmute: true
+      staffsystem.kick: true
+      staffsystem.warn: true
+      staffsystem.freeze: true
+      staffsystem.staffchat: true
+      staffsystem.history: true
+      staffsystem.admin: true
+      staffsystem.bypass.freeze: true
+      
+  staffsystem.staff:
+    description: Access to staff GUI
+    default: op
+    
+  staffsystem.ban:
+    description: Permission to permanently ban players
+    default: op
+    
+  staffsystem.tempban:
+    description: Permission to temporarily ban players
+    default: op
+    
+  staffsystem.unban:
+    description: Permission to unban players
+    default: op
+    
+  staffsystem.mute:
+    description: Permission to permanently mute players
+    default: op
+    
+  staffsystem.tempmute:
+    description: Permission to temporarily mute players
+    default: op
+    
+  staffsystem.unmute:
+    description: Permission to unmute players
+    default: op
+    
+  staffsystem.kick:
+    description: Permission to kick players
+    default: op
+    
+  staffsystem.warn:
+    description: Permission to warn players
+    default: op
+    
+  staffsystem.freeze:
+    description: Permission to freeze players
+    default: op
+    
+  staffsystem.staffchat:
+    description: Access to staff chat
+    default: op
+    
+  staffsystem.history:
+    description: Permission to view punishment history
+    default: op
+    
+  staffsystem.admin:
+    description: Admin permissions for plugin management
+    default: op
+    
+  staffsystem.bypass.freeze:
+    description: Bypass freeze restrictions
+    default: op

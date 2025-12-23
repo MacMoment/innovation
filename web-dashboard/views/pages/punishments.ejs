@@ -1,0 +1,141 @@
+<%- include('../layouts/main', { body: `
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Punishments</h1>
+    <div class="text-muted">Total: ${totalCount}</div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="BAN" ${filters.type === 'BAN' ? 'selected' : ''}>Ban</option>
+                    <option value="TEMP_BAN" ${filters.type === 'TEMP_BAN' ? 'selected' : ''}>Temp Ban</option>
+                    <option value="MUTE" ${filters.type === 'MUTE' ? 'selected' : ''}>Mute</option>
+                    <option value="TEMP_MUTE" ${filters.type === 'TEMP_MUTE' ? 'selected' : ''}>Temp Mute</option>
+                    <option value="KICK" ${filters.type === 'KICK' ? 'selected' : ''}>Kick</option>
+                    <option value="WARN" ${filters.type === 'WARN' ? 'selected' : ''}>Warn</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" ${filters.status === 'active' ? 'selected' : ''}>Active</option>
+                    <option value="inactive" ${filters.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Player or staff name..." value="${filters.search || ''}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Punishments Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Player</th>
+                        <th>Staff</th>
+                        <th>Reason</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${punishments.map(p => {
+                        const isActive = p.active && (p.expiration === -1 || p.expiration > Date.now());
+                        const badgeClass = p.type.toLowerCase().includes('ban') ? 'ban' : 
+                            p.type.toLowerCase().includes('mute') ? 'mute' : 
+                            p.type.toLowerCase() === 'kick' ? 'kick' : 'warn';
+                        
+                        let duration = 'Permanent';
+                        if (p.duration > 0) {
+                            const days = Math.floor(p.duration / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((p.duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            duration = days > 0 ? days + 'd ' + hours + 'h' : hours + 'h';
+                        } else if (p.duration === 0) {
+                            duration = 'N/A';
+                        }
+                        
+                        return `
+                        <tr>
+                            <td>#${p.id}</td>
+                            <td><span class="badge badge-${badgeClass}">${p.type}</span></td>
+                            <td>
+                                <a href="/punishments/player/${p.player_name}" class="text-decoration-none">
+                                    ${p.player_name}
+                                </a>
+                            </td>
+                            <td>${p.staff_name}</td>
+                            <td class="text-truncate" style="max-width: 200px;">${p.reason || 'No reason'}</td>
+                            <td>${duration}</td>
+                            <td>
+                                <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                                    ${isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                            <td>${new Date(p.timestamp).toLocaleDateString()}</td>
+                            <td>
+                                <a href="/punishments/view/${p.id}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('')}
+                    ${punishments.length === 0 ? '<tr><td colspan="9" class="text-center text-muted">No punishments found</td></tr>' : ''}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+${totalPages > 1 ? `
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="?page=${currentPage - 1}&type=${filters.type}&status=${filters.status}&search=${filters.search}">Previous</a>
+        </li>
+        ${Array.from({length: Math.min(5, totalPages)}, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+                pageNum = i + 1;
+            } else if (currentPage <= 3) {
+                pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+            } else {
+                pageNum = currentPage - 2 + i;
+            }
+            return `
+            <li class="page-item ${pageNum === currentPage ? 'active' : ''}">
+                <a class="page-link" href="?page=${pageNum}&type=${filters.type}&status=${filters.status}&search=${filters.search}">${pageNum}</a>
+            </li>
+            `;
+        }).join('')}
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="?page=${currentPage + 1}&type=${filters.type}&status=${filters.status}&search=${filters.search}">Next</a>
+        </li>
+    </ul>
+</nav>
+` : ''}
+` }) %>

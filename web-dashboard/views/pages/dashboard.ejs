@@ -1,0 +1,129 @@
+<%- include('../layouts/main', { body: `
+<h1 class="mb-4">Dashboard</h1>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="stats-number">${stats.totalPunishments || 0}</div>
+                <div class="stats-label">Total Punishments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card danger">
+            <div class="card-body">
+                <div class="stats-number">${stats.activeBans || 0}</div>
+                <div class="stats-label">Active Bans</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card warning">
+            <div class="card-body">
+                <div class="stats-number">${stats.activeMutes || 0}</div>
+                <div class="stats-label">Active Mutes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card success">
+            <div class="card-body">
+                <div class="stats-number">${stats.totalWarnings || 0}</div>
+                <div class="stats-label">Total Warnings</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card info">
+            <div class="card-body">
+                <div class="stats-number">${stats.totalStaff || 0}</div>
+                <div class="stats-label">Staff Members</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="stats-number">${stats.todayPunishments || 0}</div>
+                <div class="stats-label">Today</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Punishments -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Punishments</h5>
+                <a href="/punishments" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Player</th>
+                                <th>Staff</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recentPunishments.map(p => `
+                            <tr>
+                                <td>
+                                    <span class="badge badge-${p.type.toLowerCase().includes('ban') ? 'ban' : 
+                                        p.type.toLowerCase().includes('mute') ? 'mute' : 
+                                        p.type.toLowerCase() === 'kick' ? 'kick' : 'warn'}">
+                                        ${p.type}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/punishments/player/${p.player_name}" class="text-decoration-none">
+                                        ${p.player_name}
+                                    </a>
+                                </td>
+                                <td>${p.staff_name}</td>
+                                <td class="text-truncate" style="max-width: 200px;">${p.reason || 'No reason'}</td>
+                                <td>${new Date(p.timestamp).toLocaleDateString()}</td>
+                            </tr>
+                            `).join('')}
+                            ${recentPunishments.length === 0 ? '<tr><td colspan="5" class="text-center text-muted">No punishments yet</td></tr>' : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    ${recentActivity.map(a => `
+                    <div class="list-group-item bg-transparent border-0 px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">${a.action}</div>
+                                <small class="text-muted">${a.details || ''}</small>
+                            </div>
+                            <small class="text-muted">${new Date(a.timestamp).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                    `).join('')}
+                    ${recentActivity.length === 0 ? '<p class="text-muted mb-0">No recent activity</p>' : ''}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+` }) %>

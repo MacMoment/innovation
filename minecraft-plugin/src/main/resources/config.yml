@@ -1,0 +1,201 @@
+# StaffSystem Configuration
+# Advanced Staff Management Plugin
+
+# Database Configuration
+database:
+  # Database type: mysql or sqlite
+  type: mysql
+  
+  # MySQL Settings (only if type is mysql)
+  mysql:
+    host: localhost
+    port: 3306
+    database: staffsystem
+    username: root
+    password: password
+    # Connection pool settings
+    pool:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # SQLite Settings (only if type is sqlite)
+  sqlite:
+    file: database.db
+
+# Web Dashboard Integration
+web-integration:
+  enabled: true
+  # API endpoint of your web dashboard
+  api-url: http://localhost:3000/api
+  # Secret key for authentication (must match web dashboard)
+  api-key: your-secret-api-key-here
+
+# Discord Integration
+discord:
+  enabled: true
+  # Discord bot webhook for notifications
+  webhook-url: https://discord.com/api/webhooks/your-webhook-url
+  # Send punishment notifications to Discord
+  notifications:
+    bans: true
+    mutes: true
+    kicks: true
+    warns: true
+    freezes: true
+
+# Staff Settings
+staff:
+  # Enable staff mode features
+  enabled: true
+  # Items given when entering staff mode
+  items:
+    - material: COMPASS
+      slot: 0
+      name: "&6Teleport Tool"
+      action: TELEPORT
+    - material: BOOK
+      slot: 1
+      name: "&e Player Info"
+      action: PLAYER_INFO
+    - material: ICE
+      slot: 2
+      name: "&b Freeze Player"
+      action: FREEZE
+    - material: PAPER
+      slot: 3
+      name: "&c Report Menu"
+      action: REPORTS
+    - material: BARRIER
+      slot: 8
+      name: "&4 Exit Staff Mode"
+      action: EXIT_STAFF_MODE
+
+# Punishment Settings
+punishments:
+  # Default reasons
+  default-reasons:
+    ban: "You have been banned from this server."
+    mute: "You have been muted."
+    kick: "You have been kicked from this server."
+    warn: "You have been warned."
+    freeze: "You have been frozen by a staff member."
+  
+  # Warning thresholds
+  warnings:
+    # Number of warnings before automatic action
+    threshold: 3
+    # Action to take when threshold is reached
+    action: TEMPBAN
+    # Duration for tempban (if action is TEMPBAN)
+    duration: 1d
+  
+  # Ban appeal settings
+  appeals:
+    enabled: true
+    url: https://yourserver.com/appeal
+
+# Freeze Settings
+freeze:
+  # Message shown to frozen players
+  frozen-message: "&c&lYOU ARE FROZEN! &7Do not log out or you will be banned!"
+  # Interval for frozen message (in seconds)
+  message-interval: 5
+  # Block commands while frozen
+  block-commands: true
+  # Allowed commands while frozen
+  allowed-commands:
+    - /msg
+    - /r
+    - /reply
+  # Auto-ban if player logs out while frozen
+  logout-ban:
+    enabled: true
+    reason: "Logged out while frozen"
+    duration: 7d
+
+# GUI Settings
+gui:
+  # Staff GUI title
+  staff-title: "&8Staff Panel"
+  # Punishment GUI title
+  punishment-title: "&8Punishment Menu"
+  # History GUI title
+  history-title: "&8Punishment History"
+  # GUI size (must be multiple of 9, max 54)
+  size: 54
+
+# Messages
+messages:
+  prefix: "&8[&6StaffSystem&8] "
+  no-permission: "&cYou don't have permission to do that!"
+  player-not-found: "&cPlayer not found!"
+  player-offline: "&cThat player is not online!"
+  
+  # Ban messages
+  ban:
+    success: "&aYou have banned &e{player}&a."
+    broadcast: "&c{player} &7has been banned by &c{staff}&7. Reason: &f{reason}"
+    screen: |
+      &c&lYOU ARE BANNED
+      &r
+      &7Reason: &f{reason}
+      &7Banned by: &f{staff}
+      &7Duration: &f{duration}
+      &7Expires: &f{expires}
+      &r
+      &7Appeal at: &b{appeal_url}
+  
+  # Mute messages
+  mute:
+    success: "&aYou have muted &e{player}&a."
+    broadcast: "&c{player} &7has been muted by &c{staff}&7. Reason: &f{reason}"
+    player: "&cYou have been muted! Reason: &f{reason} &cDuration: &f{duration}"
+    attempt: "&cYou are muted! Time remaining: &f{remaining}"
+  
+  # Kick messages
+  kick:
+    success: "&aYou have kicked &e{player}&a."
+    broadcast: "&c{player} &7has been kicked by &c{staff}&7. Reason: &f{reason}"
+    screen: |
+      &c&lYOU WERE KICKED
+      &r
+      &7Reason: &f{reason}
+      &7Kicked by: &f{staff}
+  
+  # Warn messages
+  warn:
+    success: "&aYou have warned &e{player}&a."
+    broadcast: "&e{player} &7has been warned by &e{staff}&7. Reason: &f{reason}"
+    player: "&c&lWARNING! &7{reason} &8(Warning #{count})"
+  
+  # Freeze messages
+  freeze:
+    frozen: "&aYou have frozen &e{player}&a."
+    unfrozen: "&aYou have unfrozen &e{player}&a."
+    player-frozen: "&c&lYOU HAVE BEEN FROZEN! &7Do not log out!"
+    player-unfrozen: "&aYou have been unfrozen."
+  
+  # Staff chat
+  staffchat:
+    format: "&8[&6SC&8] &7{player}: &f{message}"
+    toggle-on: "&aStaff chat enabled."
+    toggle-off: "&cStaff chat disabled."
+
+# Duration formats (for display)
+duration-formats:
+  permanent: "Permanent"
+  years: "{amount} year(s)"
+  months: "{amount} month(s)"
+  weeks: "{amount} week(s)"
+  days: "{amount} day(s)"
+  hours: "{amount} hour(s)"
+  minutes: "{amount} minute(s)"
+  seconds: "{amount} second(s)"
+
+# Update checker
+update-checker:
+  enabled: true
+  notify-ops: true

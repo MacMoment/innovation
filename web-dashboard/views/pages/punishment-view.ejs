@@ -1,0 +1,111 @@
+<%- include('../layouts/main', { body: `
+<div class="mb-4">
+    <a href="/punishments" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left me-2"></i>Back to Punishments
+    </a>
+    <h1>Punishment #${punishment.id}</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Punishment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted">Type</label>
+                        <div>
+                            <span class="badge badge-${punishment.type.toLowerCase().includes('ban') ? 'ban' : 
+                                punishment.type.toLowerCase().includes('mute') ? 'mute' : 
+                                punishment.type.toLowerCase() === 'kick' ? 'kick' : 'warn'}">
+                                ${punishment.type}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Status</label>
+                        <div>
+                            <span class="badge ${punishment.active && (punishment.expiration === -1 || punishment.expiration > Date.now()) ? 'bg-success' : 'bg-secondary'}">
+                                ${punishment.active && (punishment.expiration === -1 || punishment.expiration > Date.now()) ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Player</label>
+                        <div>
+                            <a href="/punishments/player/${punishment.player_name}" class="text-decoration-none">
+                                <img src="https://crafatar.com/avatars/${punishment.player_uuid}?size=24&overlay" 
+                                     alt="Avatar" class="rounded me-2" width="24" height="24">
+                                ${punishment.player_name}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Staff</label>
+                        <div>${punishment.staff_name}</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted">Reason</label>
+                        <div>${punishment.reason || 'No reason specified'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Issued</label>
+                        <div>${new Date(punishment.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Expires</label>
+                        <div>${punishment.expiration === -1 ? 'Never (Permanent)' : new Date(punishment.expiration).toLocaleString()}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">Server</label>
+                        <div>${punishment.server || 'main'}</div>
+                    </div>
+                </div>
+                
+                ${punishment.active && (punishment.type.includes('BAN') || punishment.type.includes('MUTE')) ? `
+                <hr>
+                <form action="/punishments/revoke/${punishment.id}" method="POST" onsubmit="return confirm('Are you sure you want to revoke this punishment?');">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-x-circle me-2"></i>Revoke Punishment
+                    </button>
+                </form>
+                ` : ''}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Player History</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    <strong>${punishment.player_name}</strong> has ${playerHistory.length} punishment(s)
+                </p>
+                <div class="list-group list-group-flush">
+                    ${playerHistory.slice(0, 5).map(p => `
+                    <a href="/punishments/view/${p.id}" class="list-group-item list-group-item-action bg-transparent border-0 px-0 ${p.id === punishment.id ? 'active' : ''}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge badge-${p.type.toLowerCase().includes('ban') ? 'ban' : 
+                                p.type.toLowerCase().includes('mute') ? 'mute' : 
+                                p.type.toLowerCase() === 'kick' ? 'kick' : 'warn'}">
+                                ${p.type}
+                            </span>
+                            <small class="text-muted">${new Date(p.timestamp).toLocaleDateString()}</small>
+                        </div>
+                    </a>
+                    `).join('')}
+                </div>
+                ${playerHistory.length > 5 ? `
+                <a href="/punishments/player/${punishment.player_name}" class="btn btn-sm btn-outline-primary mt-3 w-100">
+                    View All (${playerHistory.length})
+                </a>
+                ` : ''}
+            </div>
+        </div>
+    </div>
+</div>
+` }) %>

@@ -1,0 +1,171 @@
+# StaffSystem Messages Configuration
+# You can customize all plugin messages here
+
+# General messages
+prefix: "&8[&6StaffSystem&8] "
+no-permission: "&cYou don't have permission to do that!"
+player-not-found: "&cPlayer not found!"
+player-offline: "&cThat player is not online!"
+invalid-duration: "&cInvalid duration format! Use: 1d, 2h, 30m, etc."
+cannot-punish-self: "&cYou cannot punish yourself!"
+cannot-punish-staff: "&cYou cannot punish other staff members!"
+config-reloaded: "&aConfiguration reloaded successfully!"
+
+# Ban messages
+ban:
+  usage: "&cUsage: /ban <player> [duration] [reason]"
+  success: "&aSuccessfully banned &e{player}&a."
+  already-banned: "&c{player} is already banned!"
+  broadcast: "&c{player} &7has been banned by &c{staff}&7."
+  broadcast-reason: "&7Reason: &f{reason}"
+  broadcast-duration: "&7Duration: &f{duration}"
+  screen: |
+    &c&l⚠ YOU ARE BANNED ⚠
+    &r
+    &7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    &r
+    &7Reason: &f{reason}
+    &7Banned by: &f{staff}
+    &7Duration: &f{duration}
+    &7Expires: &f{expires}
+    &r
+    &7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    &r
+    &7Think this is unfair?
+    &bAppeal at: &n{appeal_url}
+
+# Unban messages
+unban:
+  usage: "&cUsage: /unban <player>"
+  success: "&aSuccessfully unbanned &e{player}&a."
+  not-banned: "&c{player} is not banned!"
+
+# Tempban messages
+tempban:
+  usage: "&cUsage: /tempban <player> <duration> [reason]"
+  success: "&aSuccessfully temp-banned &e{player} &afor &e{duration}&a."
+
+# Mute messages
+mute:
+  usage: "&cUsage: /mute <player> [duration] [reason]"
+  success: "&aSuccessfully muted &e{player}&a."
+  already-muted: "&c{player} is already muted!"
+  broadcast: "&e{player} &7has been muted by &e{staff}&7."
+  broadcast-reason: "&7Reason: &f{reason}"
+  broadcast-duration: "&7Duration: &f{duration}"
+  player-notify: "&c&l⚠ YOU HAVE BEEN MUTED ⚠"
+  player-reason: "&7Reason: &f{reason}"
+  player-duration: "&7Duration: &f{duration}"
+  player-expires: "&7Expires: &f{expires}"
+  attempt-blocked: "&cYou are muted and cannot chat!"
+  attempt-remaining: "&7Time remaining: &f{remaining}"
+
+# Unmute messages
+unmute:
+  usage: "&cUsage: /unmute <player>"
+  success: "&aSuccessfully unmuted &e{player}&a."
+  not-muted: "&c{player} is not muted!"
+  player-notify: "&aYou have been unmuted!"
+
+# Kick messages
+kick:
+  usage: "&cUsage: /kick <player> [reason]"
+  success: "&aSuccessfully kicked &e{player}&a."
+  broadcast: "&c{player} &7has been kicked by &c{staff}&7."
+  broadcast-reason: "&7Reason: &f{reason}"
+  screen: |
+    &c&l⚠ YOU WERE KICKED ⚠
+    &r
+    &7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    &r
+    &7Reason: &f{reason}
+    &7Kicked by: &f{staff}
+    &r
+    &7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Warn messages
+warn:
+  usage: "&cUsage: /warn <player> [reason]"
+  success: "&aSuccessfully warned &e{player}&a."
+  broadcast: "&e{player} &7has been warned by &e{staff}&7."
+  broadcast-reason: "&7Reason: &f{reason}"
+  player-notify: "&c&l⚠ WARNING ⚠"
+  player-reason: "&7{reason}"
+  player-count: "&7This is warning &c#{count}&7."
+  threshold-reached: "&c{player} &7has reached &c{threshold} &7warnings!"
+  threshold-action: "&7Automatic action: &c{action}"
+
+# Freeze messages
+freeze:
+  usage: "&cUsage: /freeze <player>"
+  frozen: "&aSuccessfully froze &e{player}&a."
+  unfrozen: "&aSuccessfully unfroze &e{player}&a."
+  already-frozen: "&c{player} is already frozen!"
+  not-frozen: "&c{player} is not frozen!"
+  player-frozen: |
+    &c&l⚠ YOU HAVE BEEN FROZEN ⚠
+    &r
+    &7You have been frozen by a staff member.
+    &7Do &c&lNOT &7log out or you will be banned!
+    &7Please wait for further instructions.
+  player-unfrozen: "&aYou have been unfrozen. You may move again."
+  reminder: "&c&l⚠ FROZEN ⚠ &7Do not log out!"
+  move-blocked: "&cYou cannot move while frozen!"
+  command-blocked: "&cYou cannot use commands while frozen!"
+  logout-ban: "&cLogged out while frozen - automatic ban applied!"
+
+# Staff chat messages
+staffchat:
+  format: "&8[&6SC&8] &7{rank} &e{player}&7: &f{message}"
+  toggle-on: "&aStaff chat &2enabled&a. Your messages will be sent to staff chat."
+  toggle-off: "&cStaff chat &4disabled&c. Your messages will be sent to public chat."
+  no-staff-online: "&cNo other staff members are online."
+
+# History messages
+history:
+  usage: "&cUsage: /history <player>"
+  header: "&7━━━━━ &6Punishment History: &e{player} &7━━━━━"
+  no-history: "&7No punishment history found."
+  entry: "&7{id}. &e{type} &7- &f{reason}"
+  entry-date: "&7   Date: &f{date}"
+  entry-staff: "&7   By: &f{staff}"
+  entry-duration: "&7   Duration: &f{duration}"
+  entry-active: "&7   Status: &a{status}"
+  footer: "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  page-info: "&7Page &e{page}&7/&e{total}"
+
+# Staff mode messages
+staffmode:
+  enabled: "&aStaff mode &2enabled&a."
+  disabled: "&cStaff mode &4disabled&c."
+  inventory-stored: "&7Your inventory has been stored."
+  inventory-restored: "&7Your inventory has been restored."
+
+# GUI titles
+gui:
+  staff-panel: "&8Staff Panel"
+  punishment-menu: "&8Punish: &c{player}"
+  history-menu: "&8History: &e{player}"
+  reports-menu: "&8Reports"
+  online-players: "&8Online Players"
+  confirm: "&8Confirm Action"
+
+# Time formats
+time:
+  permanent: "Permanent"
+  never: "Never"
+  expired: "Expired"
+  years: "{amount}y"
+  months: "{amount}mo"
+  weeks: "{amount}w"
+  days: "{amount}d"
+  hours: "{amount}h"
+  minutes: "{amount}m"
+  seconds: "{amount}s"
+  format-long: "{years} {months} {weeks} {days} {hours} {minutes} {seconds}"
+
+# Error messages
+error:
+  database: "&cA database error occurred. Please contact an administrator."
+  api: "&cFailed to communicate with the web dashboard."
+  unknown: "&cAn unknown error occurred. Please try again."
